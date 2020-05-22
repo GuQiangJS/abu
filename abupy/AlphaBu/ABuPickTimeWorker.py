@@ -52,14 +52,14 @@ class AbuPickTimeWorker(AbuPickTimeWorkBase):
         #                                                    n_folds=1) if ABuEnv.g_enable_ml_feature else None
         # 传递给因子系列，因子内部可有选择性使用
         self.benchmark = benchmark
+        # 择时最终买入卖出行为列表，列表中每一个对象都为AbuOrder对象
+        self.orders = list()
         # 初始化买入因子列表
         self.init_buy_factors(buy_factors)
         # 初始化卖出因子列表
         self.init_sell_factors(sell_factors)
         # 根据因子是否支持周，月任务属性，筛选周月任务因子对象列表，在初始化时做，提高时间驱动效率
         self.filter_long_task_factors()
-        # 择时最终买入卖出行为列表，列表中每一个对象都为AbuOrder对象
-        self.orders = list()
         # 择时进度条，默认空, 即不打开，不显示择时进度
         self.task_pg = None
 
@@ -297,7 +297,7 @@ class AbuPickTimeWorker(AbuPickTimeWorkBase):
             # pop出类信息后剩下的都为类需要的参数
             class_fac = factor_class_cp.pop('class')
             # 整合capital，kl_pd等实例化因子对象
-            factor = class_fac(self.capital, self.kl_pd, self.combine_kl_pd, self.benchmark, **factor_class_cp)
+            factor = class_fac(self.capital, self.kl_pd, self.combine_kl_pd, self.benchmark, self.orders, **factor_class_cp)
 
             if not isinstance(factor, AbuFactorBuyBase):
                 # 因子对象类型检测

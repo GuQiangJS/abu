@@ -70,12 +70,13 @@ class AbuFactorBuyBase(six.with_metaclass(ABCMeta, AbuParamBase)):
         且选股因子动态在择时周期内每月或者每周根据策略重新进行选股。
     """
 
-    def __init__(self, capital, kl_pd, combine_kl_pd, benchmark, **kwargs):
+    def __init__(self, capital, kl_pd, combine_kl_pd, benchmark, orders, **kwargs):
         """
         :param capital:资金类AbuCapital实例化对象
         :param kl_pd:择时时段金融时间序列，pd.DataFrame对象
         :param combine_kl_pd:合并了之前一年时间序列的金融时间序列，pd.DataFrame对象
         :param benchmark: 交易基准对象，AbuBenchmark实例对象, 因子可有选择性使用，比如大盘对比等功能
+        :param orders: 择时最终买入卖出行为列表，列表中每一个对象都为AbuOrder对象
         """
         # 择时金融时间序列走势数据
         self.kl_pd = kl_pd
@@ -102,6 +103,8 @@ class AbuFactorBuyBase(six.with_metaclass(ABCMeta, AbuParamBase)):
         self.lock_factor = False
         # kwargs参数中其它设置赋予买入因子的参数
         self._other_kwargs_init(**kwargs)
+        # 择时最终买入卖出行为列表，列表中每一个对象都为AbuOrder对象
+        self.orders=orders
 
         # 子类继续完成自有的构造
         self._init_self(**kwargs)
