@@ -14,6 +14,7 @@ from .ABuMarket import MarketMixin
 from . import ABuIndustries
 from . import ABuMarketDrawing
 from . import ABuNetWork
+from . import ABuDataFeed
 
 __all__ = [
     'BaseMarket',

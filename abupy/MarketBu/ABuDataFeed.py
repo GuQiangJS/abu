@@ -28,7 +28,6 @@ from ..UtilBu.ABuDTUtil import catch_error
 from ..CoreBu.ABuDeprecated import AbuDeprecated
 # noinspection PyUnresolvedReferences
 from ..CoreBu.ABuFixes import xrange, range, filter
-
 """网络请求（连接10秒，接收60秒）超时时间"""
 K_TIME_OUT = (10, 60)
 
@@ -45,8 +44,9 @@ def query_symbol_sub_market(symbol):
     conn = sqlite.connect(path)
     cur = conn.cursor()
     symbol = symbol.lower()
-    query = "select {} from {} where {} like \'{}.%\'".format(TXApi.K_DB_TABLE_SN, TXApi.K_DB_TABLE_NAME,
-                                                              TXApi.K_DB_TABLE_SN, symbol)
+    query = "select {} from {} where {} like \'{}.%\'".format(
+        TXApi.K_DB_TABLE_SN, TXApi.K_DB_TABLE_NAME, TXApi.K_DB_TABLE_SN,
+        symbol)
     cur.execute(query)
     results = cur.fetchall()
     conn.close()
@@ -67,7 +67,8 @@ def query_symbol_from_pinyin(pinyin):
     conn = sqlite.connect(path)
     cur = conn.cursor()
     pinyin = pinyin.lower()
-    query = "select stockCode from {} where pinyin=\'{}\'".format(TXApi.K_DB_TABLE_NAME, pinyin)
+    query = "select stockCode from {} where pinyin=\'{}\'".format(
+        TXApi.K_DB_TABLE_NAME, pinyin)
     cur.execute(query)
     results = cur.fetchall()
     conn.close()
@@ -109,13 +110,16 @@ class BDApi(StockBaseMarket, SupportMixin):
         log_id = self._action_id + self._version2_log_cnt * 66
         cuid = ABuStrUtil.create_random_with_num_low(40)
         device = random_from_list(StockBaseMarket.K_DEV_MODE_LIST)
-        url = BDApi.K_NET_DAY % (cuid, device, str(log_id), str(self._action_id), self._symbol.value)
+        url = BDApi.K_NET_DAY % (cuid, device, str(log_id), str(
+            self._action_id), self._symbol.value)
         # logging.info(url)
         next_start = None
         kl_df = None
         if start:
             # 需重新计算n_fold
-            days = ABuDateUtil.diff(start, ABuDateUtil.current_str_date(), check_order=False)
+            days = ABuDateUtil.diff(start,
+                                    ABuDateUtil.current_str_date(),
+                                    check_order=False)
             # 每次返回300条数据
             n_folds = int(days / 300.0)
 
@@ -129,12 +133,12 @@ class BDApi(StockBaseMarket, SupportMixin):
                 temp_df = self.data_parser_cls(self._symbol, data.json()).df
 
             if temp_df is not None:
-                next_start = int(temp_df.loc[temp_df.index[0], ['date']].values[0])
+                next_start = int(
+                    temp_df.loc[temp_df.index[0], ['date']].values[0])
             kl_df = temp_df if kl_df is None else pd.concat([temp_df, kl_df])
             # 因为是从前向后请求，且与时间无关，所以可以直接在for里面中断
             if kl_df is None:
                 return None
-
             """由于每次放回300条>1年的数据，所以超出总数就不再请求下一组"""
             if kl_df.shape[0] > ABuEnv.g_market_trade_year * n_folds:
                 break
@@ -146,7 +150,8 @@ class BDApi(StockBaseMarket, SupportMixin):
         cuid = ABuStrUtil.create_random_with_num_low(40)
         log_id = self._action_id + self._version2_log_cnt * 66
         device = random_from_list(StockBaseMarket.K_DEV_MODE_LIST)
-        url = BDApi.MINUTE_NET_5D % (cuid, device, str(log_id), str(self._action_id), self._symbol.value)
+        url = BDApi.MINUTE_NET_5D % (cuid, device, str(log_id),
+                                     str(self._action_id), self._symbol.value)
 
         return ABuNetWork.get(url=url, timeout=K_TIME_OUT).json()
 
@@ -165,7 +170,9 @@ class TXApi(StockBaseMarket, SupportMixin):
 
     K_DB_TABLE_NAME = "values_table"
     K_DB_TABLE_SN = "stockCode"
-    p_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.path.pardir))
+    p_dir = os.path.abspath(
+        os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                     os.path.pardir))
     K_SYMBOLS_DB = os.path.join(p_dir, 'RomDataBu/symbols_db.db')
 
     def __init__(self, symbol):
@@ -200,32 +207,35 @@ class TXApi(StockBaseMarket, SupportMixin):
                 sub_market = ''
             else:
                 # 这里tx的source不支持US_PINK, US_OTC, US_PREIPO
-                sub_market_map = {EMarketSubType.US_N.value: 'n',
-
-                                  EMarketSubType.US_PINK.value: 'n',
-                                  EMarketSubType.US_OTC.value: 'n',
-                                  EMarketSubType.US_PREIPO.value: 'n',
-                                  EMarketSubType.US_AMEX.value: 'n',
-
-                                  EMarketSubType.US_OQ.value: 'oq'}
-                sub_market = '.{}'.format(sub_market_map[self._symbol.sub_market.value])
-            url = TXApi.K_NET_BASE % (
-                market, self._symbol.value + sub_market, days,
-                dev_mod, cuid, cuid, cuid_md5, screen[0], screen[1], os_ver, int(random_suffix, 10))
+                sub_market_map = {
+                    EMarketSubType.US_N.value: 'n',
+                    EMarketSubType.US_PINK.value: 'n',
+                    EMarketSubType.US_OTC.value: 'n',
+                    EMarketSubType.US_PREIPO.value: 'n',
+                    EMarketSubType.US_AMEX.value: 'n',
+                    EMarketSubType.US_OQ.value: 'oq'
+                }
+                sub_market = '.{}'.format(
+                    sub_market_map[self._symbol.sub_market.value])
+            url = TXApi.K_NET_BASE % (market, self._symbol.value + sub_market,
+                                      days, dev_mod, cuid, cuid, cuid_md5,
+                                      screen[0], screen[1], os_ver,
+                                      int(random_suffix, 10))
         elif self._symbol.market == EMarketTargetType.E_MARKET_TARGET_HK:
             market = self._symbol.market.value
             url = TXApi.K_NET_BASE % (
-                market, self._symbol.value, days,
-                dev_mod, cuid, cuid, cuid_md5, screen[0], screen[1], os_ver, int(random_suffix, 10))
+                market, self._symbol.value, days, dev_mod, cuid, cuid,
+                cuid_md5, screen[0], screen[1], os_ver, int(random_suffix, 10))
         else:
             market = ''
             url = TXApi.K_NET_BASE % (
-                market, self._symbol.value, days,
-                dev_mod, cuid, cuid, cuid_md5, screen[0], screen[1], os_ver, int(random_suffix, 10))
+                market, self._symbol.value, days, dev_mod, cuid, cuid,
+                cuid_md5, screen[0], screen[1], os_ver, int(random_suffix, 10))
 
         data = ABuNetWork.get(url, timeout=K_TIME_OUT)
         if data is not None:
-            kl_pd = self.data_parser_cls(self._symbol, sub_market, data.json()).df
+            kl_pd = self.data_parser_cls(self._symbol, sub_market,
+                                         data.json()).df
         else:
             return None
 
@@ -243,7 +253,8 @@ class TXApi(StockBaseMarket, SupportMixin):
         os_ver = random_from_list(StockBaseMarket.K_OS_VERSION_LIST)
         screen = random_from_list(StockBaseMarket.K_PHONE_SCREEN)
 
-        url = TXApi.K_NET_HK_MNY % (self._symbol.value, dev_mod, cuid, cuid, cuid_md5, screen[0], screen[1], os_ver,
+        url = TXApi.K_NET_HK_MNY % (self._symbol.value, dev_mod, cuid, cuid,
+                                    cuid_md5, screen[0], screen[1], os_ver,
                                     int(random_suffix, 10))
         return ABuNetWork.get(url, timeout=K_TIME_OUT)
 
@@ -281,7 +292,11 @@ class NTApi(StockBaseMarket, SupportMixin):
             symbol = self._symbol.symbol_code.upper()
             if self._symbol.is_us_index():
                 # ntes 需要做映射匹配大盘symbol
-                index_dict = {'.DJI': 'DOWJONES', '.IXIC': 'NASDAQ', '.INX': 'SP500'}
+                index_dict = {
+                    '.DJI': 'DOWJONES',
+                    '.IXIC': 'NASDAQ',
+                    '.INX': 'SP500'
+                }
                 symbol = index_dict[symbol]
         elif self._symbol.market == EMarketTargetType.E_MARKET_TARGET_HK:
             market = self._symbol.market.value
@@ -393,11 +408,13 @@ class SNFuturesGBApi(FuturesBaseMarket, SupportMixin):
     def kline(self, n_folds=2, start=None, end=None):
         """日k线接口"""
         today = ABuDateUtil.current_str_date().replace('-', '_')
-        url = SNFuturesGBApi.K_NET_BASE % (self._symbol.symbol_code, today, self._symbol.symbol_code, today)
+        url = SNFuturesGBApi.K_NET_BASE % (self._symbol.symbol_code, today,
+                                           self._symbol.symbol_code, today)
         data = ABuNetWork.get(url=url, timeout=(10, 60))
         text = data.text
         # 返回的是Javascript字符串解析出dict
-        js_dict = ABuNetWork.parse_js(text[text.find('=(') + 2:text.rfind(')')])
+        js_dict = ABuNetWork.parse_js(text[text.find('=(') +
+                                           2:text.rfind(')')])
         kl_df = self.data_parser_cls(self._symbol, js_dict).df
         if kl_df is None:
             return None
@@ -426,8 +443,9 @@ class HBApi(TCBaseMarket, SupportMixin):
         req_cnt = n_folds * ABuEnv.g_market_trade_year
         if start is not None and end is not None:
             # 向上取整数，下面使用_fix_kline_pd再次进行剪裁, 要使用current_str_date不能是end
-            folds = math.ceil(ABuDateUtil.diff(ABuDateUtil.date_str_to_int(start),
-                                               ABuDateUtil.current_str_date()) / 365)
+            folds = math.ceil(
+                ABuDateUtil.diff(ABuDateUtil.date_str_to_int(start),
+                                 ABuDateUtil.current_str_date()) / 365)
             req_cnt = folds * ABuEnv.g_market_trade_year
 
         url = HBApi.K_NET_BASE % (self._symbol.symbol_code, req_cnt)
@@ -440,3 +458,87 @@ class HBApi(TCBaseMarket, SupportMixin):
     def minute(self, *args, **kwargs):
         """分钟k线接口"""
         raise NotImplementedError('HBApi minute NotImplementedError!')
+
+
+class QAAdvAPI(StockBaseMarket, SupportMixin):
+    """使用QUANTAIXS读取数据的数据源（从本地数据库中）
+
+    Examples:
+        >>> import abupy
+        >>> symbol = abupy.ABuMarket.code_to_symbol('sz300002')
+        >>> df = abupy.MarketBu.ABuDataFeed.QAAdvAPI(symbol).kline()
+        >>> print(df.head())
+                      open    high     low   close      volume      amount  pre_close     adj      date  date_week
+        dt                                                                              
+        2009-10-30  6.5138  9.6178  5.5963  6.6960  3.4762e+06  2.3731e+09        NaN  0.0651  20091030          4
+        2009-11-02  6.0264  6.6446  6.0264  6.0908  1.1576e+06  7.1909e+08     6.6960  0.0651  20091102          0
+        2009-11-03  6.2535  6.4084  6.1038  6.2594  6.4153e+05  4.0041e+08     6.0908  0.0651  20091103          1
+        2009-11-04  6.2470  6.6361  6.2372  6.5145  5.1760e+05  3.3578e+08     6.2594  0.0651  20091104          2
+        2009-11-05  6.5704  6.9192  6.5073  6.7207  4.9798e+05  3.3507e+08     6.5145  0.0651  20091105          3
+    """
+    def _support_market(self):
+        """声明数据源支持A股"""
+        return [EMarketTargetType.E_MARKET_TARGET_CN]
+
+    def kline(self, n_folds=2, start=None, end=None, fq='01'):
+        """
+
+        Args:
+            n_folds: 无效。
+            start: 数据开始日期。默认为 `1990-01-01`。
+            end: 数据结束日期。默认为 `2019-12-31`。
+            fq: 复权操作。默认为'01'。
+                - '00'/'bfq'：不复权
+                - '01'/'qfq'：前复权
+                - '02'/'hfq'：后复权
+
+        Returns:
+            py:class:`pandas.DataFrame`:
+        """
+        import QUANTAXIS as QA
+        if start is None:
+            start = '1990-01-01'
+        if end is None:
+            end = '2019-12-31'
+        if_drop_index = True
+        if self._symbol.is_a_index():
+            # kl_df = QA.QAFetch.QATdx.QA_fetch_get_index_day(self._symbol.symbol_code, start, end)#在线
+            # kl_df['date'] = pd.to_datetime(kl_df['date'])
+            kl_df = QA.QA_fetch_index_day_adv(self._symbol.symbol_code, start,
+                                              end)  #MongoDb
+            res_reset_index = kl_df.data.reset_index()
+            res_reset_index = res_reset_index.set_index(['date'],
+                                                        drop=if_drop_index)
+            res_reset_index['date'] = res_reset_index.index.get_level_values(0)
+            res_reset_index['date'] = res_reset_index['date'].dt.strftime(
+                '%Y%m%d').apply(lambda x: ABuDateUtil.date_str_to_int(x))
+            res_reset_index['pre_close'] = res_reset_index['close']
+            res_reset_index.index.name = 'dt'
+            return res_reset_index
+        # kl_df=QA.QAFetch.QATdx.QA_fetch_get_stock_day(self._symbol.symbol_code,start,end)#在线
+        # kl_df['date']=pd.to_datetime(kl_df['date'])
+        # res_reset_index=kl_df.set_index(['date', 'code'], drop=if_drop_index)
+        kl_df = QA.QA_fetch_stock_day_adv(self._symbol.symbol_code, start,
+                                          end)  #MongoDb
+
+        if fq in ['01', 'qfq']:
+            res_reset_index = kl_df.to_qfq().data
+        elif fq in ['02', 'hfq']:
+            res_reset_index = kl_df.to_hfq().data
+        else:
+            res_reset_index = kl_df.data
+        if res_reset_index is None:
+            return None
+        res_reset_index.rename(columns={'preclose': 'pre_close'}, inplace=True)
+        res_reset_index['date'] = res_reset_index.index.get_level_values(0)
+        res_reset_index['date'] = res_reset_index['date'].dt.strftime(
+            '%Y%m%d').apply(lambda x: ABuDateUtil.date_str_to_int(x))
+        res_reset_index.index = res_reset_index.index.droplevel(1)
+        res_reset_index.index.name = 'dt'
+        res_reset_index['date_week'] = res_reset_index.index.dayofweek
+        return res_reset_index
+        # return abupy.StockBaseMarket._fix_kline_pd(kl_df, n_folds, start, end)
+
+    def minute(self, n_fold=5, *args, **kwargs):
+        """分钟k线接口"""
+        raise NotImplementedError('QAApi minute NotImplementedError!')
