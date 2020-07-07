@@ -106,21 +106,21 @@ def transform_action(orders_pd):
     """
 
     # 从order中摘出买入交易行为
-    buy_actions = orders_pd.loc[:, ['buy_date', 'buy_price', 'buy_cnt', 'symbol', 'expect_direction', 'sell_price']]
+    buy_actions = orders_pd.loc[:, ['buy_date', 'buy_price', 'buy_cnt', 'symbol', 'expect_direction','sell_date', 'sell_price']]
     # action = buy
     buy_actions['action'] = 'buy'
     # ACTION和order都有的action使用首字母大写，内容小写区分开
     buy_actions = buy_actions.rename(columns={'buy_date': 'Date', 'buy_price': 'Price', 'buy_cnt': 'Cnt',
-                                              'sell_price': 'Price2', 'expect_direction': 'Direction'})
+                                              'sell_price': 'Price2','sell_date':'Date2', 'expect_direction': 'Direction'})
     buy_actions.index = np.arange(0, buy_actions.shape[0])
 
     # 从order中摘出卖出交易行为
-    sell_actions = orders_pd.loc[:, ['sell_date', 'sell_price', 'buy_cnt', 'symbol', 'expect_direction', 'buy_price']]
+    sell_actions = orders_pd.loc[:, ['sell_date', 'sell_price', 'buy_cnt', 'symbol', 'expect_direction', 'buy_date', 'buy_price']]
     # action = sell
     sell_actions['action'] = 'sell'
     # action和order都有的action使用首字母大写，内容小写区分开
     sell_actions = sell_actions.rename(columns={'sell_date': 'Date', 'sell_price': 'Price', 'buy_cnt': 'Cnt',
-                                                'buy_price': 'Price2', 'expect_direction': 'Direction'})
+                                                'buy_price': 'Price2','buy_date':'Date2', 'expect_direction': 'Direction'})
     sell_actions.index = np.arange(buy_actions.shape[0], buy_actions.shape[0] + sell_actions.shape[0])
 
     # 把买入交易行为和卖出交易行为连起来
