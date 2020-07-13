@@ -8,7 +8,7 @@ from __future__ import absolute_import
 from __future__ import division
 
 import math
-
+import logging
 import numpy as np
 
 from ..CoreBu import ABuEnv
@@ -95,6 +95,9 @@ class AbuOrder(object):
             """
             # 执行fit_position，通过仓位管理计算买入的数量
             bc = position.fit_position(factor_object)
+
+            logging.debug("{}:Count:{};Price:{:.2f}".format(kl_pd.name,bc,bp))
+
             if np.isnan(bc):
                 return
 
@@ -178,6 +181,8 @@ class AbuOrder(object):
             self.ml_features = None
             # 订单形成
             self.order_deal = True
+        else:
+            logging.debug("{}:Price is NaN".format(kl_pd.name))
 
     def fit_sell_order(self, day_ind, factor_object):
         """
