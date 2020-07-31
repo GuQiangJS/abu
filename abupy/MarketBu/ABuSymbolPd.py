@@ -244,7 +244,7 @@ def kl_df_dict_parallel(symbols, data_mode=ABuEnv.EMarketDataSplitMode.E_DATA_SP
 
 # noinspection PyDeprecation
 def make_kl_df(symbol, data_mode=ABuEnv.EMarketDataSplitMode.E_DATA_SPLIT_SE,
-               n_folds=2, start=None, end=None, benchmark=None, show_progress=True, parallel=False, parallel_save=True):
+               n_folds=2, start=None, end=None, benchmark=None, show_progress=True, parallel=False, parallel_save=True,**kwargs):
     """
     外部获取金融时间序列接口
     eg: n_fold=2, start=None, end=None ，从今天起往前数两年
@@ -262,8 +262,13 @@ def make_kl_df(symbol, data_mode=ABuEnv.EMarketDataSplitMode.E_DATA_SPLIT_SE,
     :param show_progress: 是否显示进度条
     :param parallel: 是否并行获取
     :param parallel_save: 是否并行后进行统一批量保存
+    :param single_save: 是否在非并行获取后保存。默认为True
     """
 
+    # 增加是否在获取到数据后保存至本地缓存。
+    # 因为我是采用从网络读取数据的方式（E_DATA_FETCH_FORCE_NET）读取本地MongoDB中的数据或自己已经拼接好的csv文件
+    # 完全没有必要再在缓存中存储一份。但是为了保持逻辑一致性，所以默认还是为True。
+    single_save = kwargs.pop('single_save', True)
     if isinstance(symbol, (list, tuple, pd.Series, pd.Index)):
         # 如果symbol是可迭代的序列对象，最终返回三维面板数据pd.Panel
         panel = dict()
@@ -287,7 +292,8 @@ def make_kl_df(symbol, data_mode=ABuEnv.EMarketDataSplitMode.E_DATA_SPLIT_SE,
                 with AbuMulPidProgress(len(symbol), '_make_kl_df complete') as progress:
                     for pos, _symbol in enumerate(symbol):
                         _df, _ = _make_kl_df(_symbol, data_mode=data_mode,
-                                             n_folds=n_folds, start=start, end=end, benchmark=benchmark, save=True)
+                                             n_folds=n_folds, start=start, end=end, benchmark=benchmark,
+                                             save=single_save)
                         if show_progress:
                             progress.show()
                         # TODO 做pd.Panel数据应该保证每一个元素的行数和列数都相等，不是简单的有数据就行
@@ -303,7 +309,7 @@ def make_kl_df(symbol, data_mode=ABuEnv.EMarketDataSplitMode.E_DATA_SPLIT_SE,
     elif isinstance(symbol, Symbol) or isinstance(symbol, six.string_types):
         # 对单个symbol进行数据获取
         df, _ = _make_kl_df(symbol, data_mode=data_mode,
-                            n_folds=n_folds, start=start, end=end, benchmark=benchmark, save=True)
+                            n_folds=n_folds, start=start, end=end, benchmark=benchmark, save=single_save)
         return df
     else:
         raise TypeError('symbol type is error')

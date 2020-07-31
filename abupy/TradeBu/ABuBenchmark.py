@@ -22,7 +22,10 @@ __weixin__ = 'abu_quant'
 class AbuBenchmark(PickleStateMixin):
     """基准类，混入PickleStateMixin，因为在abu.store_abu_result_tuple会进行对象本地序列化"""
 
-    def __init__(self, benchmark=None, start=None, end=None, n_folds=2, rs=True, benchmark_kl_pd=None):
+    def __init__(self, benchmark=None, start=None, end=None, n_folds=2, rs=True, benchmark_kl_pd=None,**kwargs):
+        """
+        :param single_save: 是否在非并行获取后保存。默认为True
+        """
         if benchmark_kl_pd is not None and hasattr(benchmark_kl_pd, 'name'):
             """从金融时间序列直接构建"""
             self.benchmark = benchmark_kl_pd.name
@@ -61,10 +64,14 @@ class AbuBenchmark(PickleStateMixin):
         self.start = start
         self.end = end
         self.n_folds = n_folds
+        # 增加是否在获取到数据后保存至本地缓存。
+        # 因为我是采用从网络读取数据的方式（E_DATA_FETCH_FORCE_NET）读取本地MongoDB中的数据或自己已经拼接好的csv文件
+        # 完全没有必要再在缓存中存储一份。但是为了保持逻辑一致性，所以默认还是为True。
+        single_save = kwargs.pop('single_save', True)
         # 基准获取数据使用data_mode=EMarketDataSplitMode.E_DATA_SPLIT_SE，即不需要对齐其它，只需要按照时间切割
         self.kl_pd = ABuSymbolPd.make_kl_df(benchmark, data_mode=EMarketDataSplitMode.E_DATA_SPLIT_SE,
                                             n_folds=n_folds,
-                                            start=start, end=end)
+                                            start=start, end=end,single_save=single_save)
 
         if rs and self.kl_pd is None:
             # 如果基准时间序列都是none，就不要再向下运行了
